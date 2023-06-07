@@ -19,7 +19,7 @@ app.use(cors());
 // Connect to MongoDB
 
 // routes
-app.use("/v1", v1Router);
+app.use("/api/v1", v1Router);
 
 // health check api
 app.get("/health-check", (request, response) =>
