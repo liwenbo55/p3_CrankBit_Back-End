@@ -1,0 +1,36 @@
+name: Test, Build, Check
+on:
+  pull_request:
+    branches: ['main']
+env:
+  NODE_ENV: development
+  MONGO_URI: ${{ secrets.MONGO_URI }}
+  JWT_SECRET: jwtsecret
+  JWT_LIFETIME: 1d
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  CI:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install and Build
+        run: |
+          yarn set version stable
+          yarn
+          CI=false yarn pre-commit
+          yarn test
+          yarn build
+          yarn start:pm2
+      - name: Health Check
+        uses: jtalk/url-health-check-action@v3
+        with:
+          url: http://localhost:5000/health-check
+          max-attempts: 5
+          retry-delay: 6s

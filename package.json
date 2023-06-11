@@ -2,15 +2,14 @@
   "name": "allgood-backend",
   "version": "1.0.0",
   "main": "dist/app.js",
-  "engines": {
-    "node": "^18.0.0",
-    "yarn": "^3.6.0"
-  },
   "scripts": {
     "dev": "nodemon",
-    "start": "node dist/app.js",
-    "build": "npm run clean && tsc",
+    "start": "nodemon",
+    "start:node": "node dist/app.js",
+    "start:pm2": "pm2 start dist/app.js",
+    "build": "tsc",
     "clean": "rm -rf dist",
+    "test": "jest --passWithNoTests",
     "lint": "eslint --ext .ts, src/ --no-cache",
     "lint:f": "eslint --ext .ts, src/ --fix --no-cache",
     "prettier:f": "prettier --write .",
@@ -62,6 +61,7 @@
     "jest": "^28.1.0",
     "lint-staged": "^12.4.1",
     "nodemon": "^2.0.16",
+    "pm2": "^5.3.0",
     "prettier": "^2.8.8",
     "tsc-watch": "^5.0.3",
     "typescript": "^4.6.4"
@@ -76,15 +76,21 @@
       "src"
     ]
   },
+  "jest": {
+    "collectCoverageFrom": [
+      "src/**/*.ts"
+    ]
+  },
   "husky": {
     "hooks": {
       "pre-commit": "npm run pre-commit"
     }
   },
   "lint-staged": {
-    "*.{ts}": [
-      "npm run pre-commit",
-      "git add ."
-    ]
+    "*.{js,jsx,ts,tsx,css,json,md}": []
+  },
+  "engines": {
+    "node": "^18.0.0",
+    "yarn": "^3.6.0"
   }
 }
