@@ -32,7 +32,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerJsDoc));
 // TODO: error handler
 const port = process.env.PORT || 5000;
 
-const start = async () => {
+const start = async (): Promise<void> => {
   try {
     await connectDB(process.env.MONGO_URI);
     app.listen(port, () =>

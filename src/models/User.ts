@@ -1,16 +1,14 @@
-import mongoose, { Document, Model } from "mongoose";
+import mongoose, { Document } from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
-export interface User {
+export interface IUser extends Document {
   name: string;
   email: string;
   password: string;
   createJwt(): string;
   comparePassword(inputPassword: string): Promise<boolean>;
 }
-
-export interface UserDocument extends User, Document {}
 
 const UserSchema = new mongoose.Schema({
   name: {
@@ -34,24 +32,25 @@ const UserSchema = new mongoose.Schema({
 
 const saltRounds = 12;
 
-UserSchema.pre<UserDocument>("save", async function () {
-  if (!this.isModified("password")) return;
+UserSchema.pre<IUser>("save", async function () {
+  if (!this.isModified("password")) {
+    return;
+  }
   const salt = await bcrypt.genSalt(saltRounds);
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-UserSchema.methods.createJwt = function () {
+UserSchema.methods.createJwt = function (): string {
   return jwt.sign({ userId: this._id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_LIFETIME,
   });
 };
 
-UserSchema.methods.comparePassword = async function (inputPassword: string) {
+UserSchema.methods.comparePassword = async function (
+  inputPassword: string
+): Promise<boolean> {
   const isMatch = await bcrypt.compare(inputPassword, this.password);
   return isMatch;
 };
 
-export default mongoose.model<UserDocument, Model<UserDocument>>(
-  "User",
-  UserSchema
-);
+export const User = mongoose.model<IUser>("User", UserSchema);

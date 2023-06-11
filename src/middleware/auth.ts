@@ -5,7 +5,11 @@ import jwt from "jsonwebtoken";
 import Payload from "../types/Payload";
 import Request from "../types/Request";
 
-export default function (req: Request, res: Response, next: NextFunction) {
+const authenticateUser = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
   // Check authorization field in req.headers, e.g. authorization: 'Bearer ey...'
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer")) {
@@ -17,9 +21,10 @@ export default function (req: Request, res: Response, next: NextFunction) {
 
   // Check if no token
   if (!token) {
-    return res
+    res
       .status(HttpStatusCodes.UNAUTHORIZED)
       .json({ msg: "Authorization denied" });
+    return;
   }
   // Verify token
   try {
@@ -31,4 +36,6 @@ export default function (req: Request, res: Response, next: NextFunction) {
       .status(HttpStatusCodes.FORBIDDEN)
       .json({ msg: "Authorization invalid" });
   }
-}
+};
+
+export default authenticateUser;

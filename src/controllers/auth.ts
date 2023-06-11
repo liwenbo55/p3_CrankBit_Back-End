@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
-import User from "../models/User";
 import { StatusCodes } from "http-status-codes";
+import { User } from "../models/User";
 import UserSchema from "../schemas/User";
 
-export const register = async (req: Request, res: Response) => {
+export const register = async (req: Request, res: Response): Promise<void> => {
   const { error, value } = UserSchema.validate(req.body);
 
   if (error) {
@@ -24,6 +24,7 @@ export const register = async (req: Request, res: Response) => {
   const token = user.createJwt();
   res.status(StatusCodes.CREATED).json({
     user: {
+      userId: user._id,
       name: user.name,
       email: user.email,
     },
@@ -31,7 +32,7 @@ export const register = async (req: Request, res: Response) => {
   });
 };
 
-export const login = async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response): Promise<void> => {
   const { error, value } = UserSchema.validate(req.body);
 
   if (error) {
