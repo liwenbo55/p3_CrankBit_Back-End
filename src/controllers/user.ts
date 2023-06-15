@@ -1,45 +1,39 @@
-import { Response } from "express";
-import { StatusCodes } from "http-status-codes";
-import Request from "../types/Request";
-import { User } from "../models/User";
-import UserSchema from "../schemas/User";
+import { Response } from 'express'
+import { StatusCodes } from 'http-status-codes'
+import Request from '../types/Request'
+import { User } from '../models/User'
+import UserSchema from '../schemas/User'
 
-export const getUserById = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  const { id } = req.params;
+export const getUserById = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params
 
   try {
-    const user = await User.findById(id);
+    const user = await User.findById(id)
 
-    res.status(StatusCodes.OK).json(user);
+    res.status(StatusCodes.OK).json(user)
   } catch (err) {
-    res.status(StatusCodes.NOT_FOUND).json(err);
+    res.status(StatusCodes.NOT_FOUND).json(err)
   }
-};
+}
 
-export const updateUser = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  const { error, value } = UserSchema.validate(req.body);
+export const updateUser = async (req: Request, res: Response): Promise<void> => {
+  const { error, value } = UserSchema.validate(req.body)
 
   if (error) {
-    res.status(StatusCodes.BAD_REQUEST).json({ msg: error.message });
-    return;
+    res.status(StatusCodes.BAD_REQUEST).json({ msg: error.message })
+    return
   }
 
-  const { name, email } = value;
+  const { name, email } = value
 
-  const user = await User.findOne({ _id: req.userId });
+  const user = await User.findOne({ _id: req.userId })
 
-  user.name = name;
-  user.email = email;
+  user.name = name
+  user.email = email
 
-  await user.save();
+  await user.save()
 
-  const token = user.createJwt();
+  const token = user.createJwt()
   res.status(StatusCodes.OK).json({
     user: {
       userId: user._id,
@@ -47,5 +41,5 @@ export const updateUser = async (
       email: user.email,
     },
     token,
-  });
-};
+  })
+}

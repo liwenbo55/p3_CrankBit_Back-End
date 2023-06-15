@@ -3,7 +3,7 @@
  * @param userId:string
  */
 type Payload = {
-  userId: string;
-};
+  userId: string
+}
 
-export default Payload;
+export default Payload
