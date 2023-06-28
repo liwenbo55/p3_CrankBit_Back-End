@@ -22,6 +22,7 @@ const authenticateUser = (req: Request, res: Response, next: NextFunction): void
   }
   // Verify token
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const payload: Payload | any = jwt.verify(token, process.env.JWT_SECRET)
     req.userId = payload.userId
     next()
