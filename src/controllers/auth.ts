@@ -1,10 +1,10 @@
 import { Request, Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
-import { User } from '../models/User'
-import UserSchema from '../schemas/User'
+import { Tenant } from '../models/Tenant'
+import TenantSchema from '../schemas/Tenant'
 
 export const register = async (req: Request, res: Response): Promise<void> => {
-  const { error, value } = UserSchema.validate(req.body)
+  const { error, value } = TenantSchema.validate(req.body)
 
   if (error) {
     res.status(StatusCodes.BAD_REQUEST).json({ msg: error.message })
@@ -13,25 +13,25 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
   const { name, email, password } = value
 
-  const userExists = await User.findOne({ email })
-  if (userExists) {
+  const tenantExists = await Tenant.findOne({ email })
+  if (tenantExists) {
     res.status(StatusCodes.BAD_REQUEST).json({ msg: 'Please provide another valid email address' })
   }
 
-  const user = await User.create({ name, email, password })
-  const token = user.createJwt()
+  const tenant = await Tenant.create({ name, email, password })
+  const token = tenant.createJwt()
   res.status(StatusCodes.CREATED).json({
-    user: {
-      userId: user._id,
-      name: user.name,
-      email: user.email,
+    tenant: {
+      tenantId: tenant._id,
+      name: tenant.name,
+      email: tenant.email,
     },
     token,
   })
 }
 
 export const login = async (req: Request, res: Response): Promise<void> => {
-  const { error, value } = UserSchema.validate(req.body)
+  const { error, value } = TenantSchema.validate(req.body)
 
   if (error) {
     res.status(StatusCodes.BAD_REQUEST).json({ msg: error.message })
@@ -40,23 +40,23 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
   const { email, password } = value
 
-  const user = await User.findOne({ email }).select('+password')
-  if (!user) {
+  const tenant = await Tenant.findOne({ email }).select('+password')
+  if (!tenant) {
     res.status(StatusCodes.UNAUTHORIZED).json({ msg: 'Invalid credentials' })
   }
 
-  const isPasswordCorrect = await user.comparePassword(password)
+  const isPasswordCorrect = await tenant.comparePassword(password)
   if (!isPasswordCorrect) {
     res.status(StatusCodes.UNAUTHORIZED).json({ msg: 'Invalid credentials' })
   }
 
-  const token = user.createJwt()
-  user.password = undefined
+  const token = tenant.createJwt()
+  tenant.password = undefined
   res.status(StatusCodes.OK).json({
-    user: {
-      userId: user._id,
-      name: user.name,
-      email: user.email,
+    tenant: {
+      userId: tenant._id,
+      name: tenant.name,
+      email: tenant.email,
     },
     token,
   })

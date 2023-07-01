@@ -5,30 +5,30 @@ import jwt from 'jsonwebtoken'
 import Payload from '../types/Payload'
 import Request from '../types/Request'
 
-const authenticateUser = (req: Request, res: Response, next: NextFunction): void => {
-  // Check authorization field in req.headers, e.g. authorization: 'Bearer ey...'
+const authenticateTenant = (req: Request, res: Response, next: NextFunction): void => {
   const authHeader = req.headers.authorization
   if (!authHeader || !authHeader.startsWith('Bearer')) {
     throw new Error('Authentication Invalid')
   }
 
-  // Get token from authorizaiton field
   const token = authHeader.split(' ')[1]
 
-  // Check if no token
   if (!token) {
     res.status(HttpStatusCodes.UNAUTHORIZED).json({ msg: 'Authorization denied' })
     return
   }
-  // Verify token
+
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const payload: Payload | any = jwt.verify(token, process.env.JWT_SECRET)
-    req.userId = payload.userId
+    const verifiedToken = jwt.verify(token, process.env.JWT_SECRET)
+
+    const payload: Payload = typeof verifiedToken === 'string' ? { tenantId: verifiedToken } : verifiedToken
+
+    req.tenantId = payload.tenantId
+
     next()
   } catch (err) {
     res.status(HttpStatusCodes.FORBIDDEN).json({ msg: 'Authorization invalid' })
   }
 }
 
-export default authenticateUser
+export default authenticateTenant

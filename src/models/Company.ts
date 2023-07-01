@@ -20,6 +20,12 @@ export const createCompanySchema = (connection: mongoose.Connection): Model<ICom
       minlength: 3,
       maxlength: 30,
     },
+    user: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
   })
 
   return connection.model<ICompany>('Company', CompanySchema)
