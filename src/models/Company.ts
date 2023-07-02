@@ -28,5 +28,10 @@ export const createCompanySchema = (connection: mongoose.Connection): Model<ICom
     ],
   })
 
+  const existingModel = connection.model<ICompany>('Company')
+  if (existingModel) {
+    return existingModel
+  }
+
   return connection.model<ICompany>('Company', CompanySchema)
 }

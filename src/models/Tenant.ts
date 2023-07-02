@@ -36,6 +36,7 @@ const TenantSchema = new mongoose.Schema({
         type: String,
         required: [true, 'please provide a company'],
         unique: true,
+        sparse: true,
       },
     },
   ],
