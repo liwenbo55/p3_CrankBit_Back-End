@@ -16,6 +16,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
   const tenantExists = await Tenant.findOne({ email })
   if (tenantExists) {
     res.status(StatusCodes.BAD_REQUEST).json({ msg: 'Please provide another valid email address' })
+    return
   }
 
   const tenant = await Tenant.create({ name, email, password })
