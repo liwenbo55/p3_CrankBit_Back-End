@@ -22,7 +22,7 @@ const TenantSchema = new mongoose.Schema({
   email: {
     type: String,
     required: [true, 'please provide an email'],
-    unique: true,
+    unique: [true, 'email already exists'],
   },
   password: {
     type: String,
