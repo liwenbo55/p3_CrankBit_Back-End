@@ -5,10 +5,7 @@ export interface IUser extends Document {
   name: string
   role: string
   email: string
-  password: string
   companies: ICompany[]
-  createJwt(): string
-  comparePassword(inputPassword: string): Promise<boolean>
 }
 
 const UserSchema = new mongoose.Schema({

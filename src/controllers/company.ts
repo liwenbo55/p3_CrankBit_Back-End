@@ -21,7 +21,6 @@ export const createCompany = async (req: Request, res: Response): Promise<void> 
       return
     }
 
-    // e.g. abc.crankbit.net
     const { domain } = value
 
     const tenantsConnection = mongoose.createConnection(`${process.env.MONGO_BASE_URI}/tenants`)
@@ -40,7 +39,11 @@ export const createCompany = async (req: Request, res: Response): Promise<void> 
 
     const companyConnection = mongoose.createConnection(`${process.env.MONGO_BASE_URI}/${domain.split('.')[0]}`)
     const CompanyDBModel = createCompanySchema(companyConnection)
-    await CompanyDBModel.create({ _id: company._id, domain })
+
+    await CompanyDBModel.create({
+      _id: company._id,
+      domain,
+    })
 
     res.status(StatusCodes.CREATED).json({
       tenant: {
@@ -67,6 +70,12 @@ export const getCompanyById = async (req: Request, res: Response): Promise<void>
 
     const { id } = req.params
     const company = tenant.companies.find((comp) => comp._id.toString() === id)
+
+    if (!company) {
+      res.status(StatusCodes.NOT_FOUND).json({ msg: 'Company not found' })
+      return
+    }
+
     res.status(StatusCodes.OK).json(company)
   } catch (error) {
     res.status(StatusCodes.NOT_FOUND).json(error)

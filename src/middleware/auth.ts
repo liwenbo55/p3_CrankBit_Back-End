@@ -1,6 +1,6 @@
 import { Response, NextFunction } from 'express'
 import HttpStatusCodes from 'http-status-codes'
-import jwt from 'jsonwebtoken'
+import jwt, { JwtPayload } from 'jsonwebtoken'
 
 import Payload from '../types/Payload'
 import Request from '../types/Request'
@@ -19,9 +19,7 @@ const authenticateTenant = (req: Request, res: Response, next: NextFunction): vo
   }
 
   try {
-    const verifiedToken = jwt.verify(token, process.env.JWT_SECRET)
-
-    const payload: Payload = typeof verifiedToken === 'string' ? { tenantId: verifiedToken } : verifiedToken
+    const payload: Payload | JwtPayload = jwt.verify(token, process.env.JWT_SECRET) as JwtPayload
 
     req.tenantId = payload.tenantId
 

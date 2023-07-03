@@ -26,6 +26,12 @@ export const createCompanySchema = (connection: mongoose.Connection): Model<ICom
         ref: 'User',
       },
     ],
+    report: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Report',
+      },
+    ],
   })
 
   const existingModel = connection.model<ICompany>('Company')
