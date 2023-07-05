@@ -22,6 +22,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
   const tenant = await Tenant.create({ name, email, password })
   const token = tenant.createJwt()
   res.status(StatusCodes.CREATED).json({
+    msg: 'Sign up successfully',
     tenant: {
       tenantId: tenant._id,
       name: tenant.name,
