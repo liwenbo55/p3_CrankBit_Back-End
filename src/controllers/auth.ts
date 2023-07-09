@@ -21,6 +21,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
   const tenant = await Tenant.create({ name, email, password })
   const token = tenant.createJwt()
+
   res.status(StatusCodes.CREATED).json({
     tenant: {
       tenantId: tenant._id,
@@ -43,19 +44,25 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
   const tenant = await Tenant.findOne({ email }).select('+password')
   if (!tenant) {
+
     res.status(StatusCodes.UNAUTHORIZED).json({ message: 'Invalid credentials' })
+    return
   }
 
   const isPasswordCorrect = await tenant.comparePassword(password)
   if (!isPasswordCorrect) {
+
     res.status(StatusCodes.UNAUTHORIZED).json({ message: 'Invalid credentials' })
+    return
+
   }
 
   const token = tenant.createJwt()
   tenant.password = undefined
+
   res.status(StatusCodes.OK).json({
     tenant: {
-      userId: tenant._id,
+      tenantId: tenant._id,
       name: tenant.name,
       email: tenant.email,
     },
