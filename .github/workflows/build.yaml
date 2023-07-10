@@ -28,7 +28,8 @@ on:
           - dev
           - uat
           - prod
-
+env:
+  CI: false
 concurrency:
   group: ${{ github.ref || github.run_id }}
   cancel-in-progress: true
@@ -93,6 +94,9 @@ jobs:
     if: ${{ (github.event.inputs.environment == 'dev' || github.event.inputs.environment == 'uat' || github.event.inputs.environment == 'prod' || github.event_name == 'push') && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/uat' || github.ref == 'refs/heads/prod')}}
     needs: test
     runs-on: ubuntu-22.04
+    environment:
+      name: ${{ github.ref_name }}
+      url: ${{ vars.BACKEND_HEALTH_CHECK }}
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -105,9 +109,9 @@ jobs:
         aws-region: ${{ secrets.AWS_REGION }}
 
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2    
+      uses: docker/setup-buildx-action@v2
     
-    - name: Build docker image for development environment
+    - name: Build docker image
       env: 
         MONGO_URI: ${{ secrets.MONGO_URI }}
         JWT_SECRET: ${{ secrets.JWT_SECRET }}
