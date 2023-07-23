@@ -1,0 +1,33 @@
+{
+  "containerDefinitions": [
+    {
+      "name": "crankbit-backend-main",
+      "image": "349498089405.dkr.ecr.ap-southeast-2.amazonaws.com/crankbit-backend-main:latest",
+      "cpu": 1024,
+      "memory": 2048,
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "hostPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "environment": [],
+      "mountPoints": [],
+      "volumesFrom": []
+    }
+  ],
+  "family": "crankbit_backend_task_main",
+  "executionRoleArn": "arn:aws:iam::349498089405:role/ecs-task-execution-role-main",
+  "networkMode": "awsvpc",
+  "volumes": [],
+  "placementConstraints": [],
+  "runtimePlatform": {
+    "cpuArchitecture": "X86_64",
+    "operatingSystemFamily": "LINUX"
+  },
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "1024",
+  "memory": "2048"
+}
