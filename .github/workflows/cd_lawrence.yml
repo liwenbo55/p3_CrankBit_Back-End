@@ -1,0 +1,136 @@
+name: Build backend & deploy to AWS ECR
+run-name: ${{ github.actor }} is running workflow...
+on:
+  push:
+    branches:
+      - main
+      - uat
+      - prod
+      - 'CB**'
+  pull_request:
+    branches:
+      - main
+      - uat
+      - prod
+      
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Please select the environment on which to run:'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - uat
+          - prod
+
+concurrency:
+  group: ${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    steps: 
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: npm install
+        run: npm install
+        
+      - name: npm run test
+        run: npm run lint   
+        
+      - name: npm run test
+        run: npm run test
+
+  build_and_push:
+    if: ${{ (github.event.inputs.environment == 'dev' || github.event.inputs.environment == 'uat' || github.event.inputs.environment == 'prod' || github.event_name == 'push') && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/uat' || github.ref == 'refs/heads/prod')}}
+    runs-on: ubuntu-22.04
+    needs: test
+    environment:
+      name: ${{ github.ref_name }}
+      
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1 
+      
+      - name: Build docker image       
+        run: |
+          docker build \
+                --build-arg MONGO_URI="${{ secrets.MONGO_URI }}" \
+                --build-arg JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+                --build-arg JWT_LIFETIME="${{ secrets.JWT_LIFETIME }}" \
+                --build-arg JWT_SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}" \
+                --build-arg PORT="${{ secrets.PORT }}" \
+                --build-arg EMAIL_SERVER_PASSWORD="${{ secrets.EMAIL_SERVER_PASSWORD }}" \
+                --build-arg EMAIL_SERVER_PORT="${{ secrets.EMAIL_SERVER_PORT }}" \
+                --build-arg EMAIL_SERVER_HOST="${{ secrets.EMAIL_SERVER_HOST }}" \
+                --build-arg EMAIL_FROM="${{ secrets.EMAIL_FROM }}" \
+                --build-arg EMAIL_SERVER_USER="${{ secrets.EMAIL_SERVER_USER }}" \
+                --build-arg SENDGRID_API_KEY="${{ secrets.SENDGRID_API_KEY }}" \
+                -t ${{ secrets.ECR_REGISTRY_URI }}:${{ github.sha }} \
+                .     
+
+      - name: Push docker image to AWS ECR
+        run: docker push ${{ secrets.ECR_REGISTRY_URI }}:${{ github.sha }}
+        
+  update_ecs_service:
+    runs-on: ubuntu-22.04
+    needs: build_and_push
+    environment:
+      name: ${{ github.ref_name }}
+    steps:
+#       - name: Check out code
+#         uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+        
+      - name: Obtain remote current task definition
+        run: aws ecs describe-task-definition --task-definition crankbit-ecs-task-definition-dddev --query 'taskDefinition' > task_definition.json
+
+                    
+      - name: Generate new task definition
+        run: |
+            jq --arg new_image "${{ secrets.ECR_REGISTRY_URI }}:${{ github.sha }}" \
+            'del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy) | .containerDefinitions[0].image = $new_image' \
+            task_definition.json > new_task_definition.json
+
+      - name: Register new task definition
+        run: aws ecs register-task-definition --cli-input-json file://new_task_definition.json
+        
+      - name: Update ECS service
+        env: 
+          CLUSTER_NAME : crankbit-ecs-cluster-${{vars.ENV_NAME}}
+          SERVICE_NAME : crankbit-ecs-service-${{vars.ENV_NAME}}
+          TASK_DEFINITION : crankbit-ecs-task-definition-${{vars.ENV_NAME}}
+        run: |
+          aws ecs update-service \
+            --cluster $CLUSTER_NAME \
+            --service $SERVICE_NAME \
+            --task-definition $TASK_DEFINITION \
+            --force-new-deployment 
