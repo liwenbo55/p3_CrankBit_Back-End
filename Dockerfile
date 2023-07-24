@@ -1,21 +1,15 @@
-# Specify the base image
-FROM node:18-alpine
+# docker image
+FROM node:18
 
-# Create a directory for the app
+# Working directory
+# WORKDIR .
 WORKDIR /app
 
-# Copy the package files and install dependencies
-COPY package*.json ./
-RUN npm install
-
-# Copy the app files
-COPY . .
-
-#Use ARG command to define a build-time variable for each environment variable I want to pass.
+# Arguments
 ARG MONGO_URI
 ARG JWT_SECRET
-ARG JWT_LIFETIME
 ARG JWT_SECRET_KEY
+ARG JWT_LIFETIME
 ARG PORT
 ARG EMAIL_SERVER_PASSWORD
 ARG EMAIL_SERVER_PORT
@@ -24,6 +18,7 @@ ARG EMAIL_FROM
 ARG EMAIL_SERVER_USER
 ARG SENDGRID_API_KEY
 
+# # ENV
 # Use  ENV command to set the environment variables inside the container
 ENV MONGO_URI=${MONGO_URI}
 ENV JWT_SECRET=${JWT_SECRET}
@@ -37,12 +32,20 @@ ENV EMAIL_FROM=${EMAIL_FROM}
 ENV EMAIL_SERVER_USER=${EMAIL_SERVER_USER}
 ENV SENDGRID_API_KEY=${SENDGRID_API_KEY}
 
-# Build the app
-RUN npm run build 
+# Copy the application code into the container
+# COPY . .
+COPY . /app
 
-# Backed server is running at 8080
+# Install dependencies and run build 
+RUN npm install
+RUN npm run build
+
+# Expose port 8080
 EXPOSE 8080
 
-# Start the app
-
+# Set the entrypoint for the container
+# ENTRYPOINT [ "npm", "build" ,"npm", "start:pm2" ]
+# ENTRYPOINT npm run start:pm2
+# ENTRYPOINT npm run start:pm2 && tail -f /dev/null
+# CMD ["npm", "run", "start:pm2"]
 CMD ["npm", "start"]
