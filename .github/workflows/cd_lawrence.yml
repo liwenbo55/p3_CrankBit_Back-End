@@ -88,11 +88,11 @@ jobs:
                 --build-arg EMAIL_FROM="${{ secrets.EMAIL_FROM }}" \
                 --build-arg EMAIL_SERVER_USER="${{ secrets.EMAIL_SERVER_USER }}" \
                 --build-arg SENDGRID_API_KEY="${{ secrets.SENDGRID_API_KEY }}" \
-                -t ${{ secrets.ECR_REGISTRY_URI }}:${{ github.sha }} \
+                -t ${{ vars.ECR_REGISTRY_URI }}:${{ github.sha }} \
                 .     
 
       - name: Push docker image to AWS ECR
-        run: docker push ${{ secrets.ECR_REGISTRY_URI }}:${{ github.sha }}
+        run: docker push ${{ vars.ECR_REGISTRY_URI }}:${{ github.sha }}
         
   update_ecs_service:
     runs-on: ubuntu-22.04
@@ -116,7 +116,7 @@ jobs:
                     
       - name: Generate new task definition
         run: |
-            jq --arg new_image "${{ secrets.ECR_REGISTRY_URI }}:${{ github.sha }}" \
+            jq --arg new_image "${{ vars.ECR_REGISTRY_URI }}:${{ github.sha }}" \
             'del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy) | .containerDefinitions[0].image = $new_image' \
             task_definition.json > new_task_definition.json
 
