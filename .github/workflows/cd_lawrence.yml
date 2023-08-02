@@ -111,7 +111,7 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
         
       - name: Obtain remote current task definition
-        run: aws ecs describe-task-definition --task-definition crankbit-ecs-task-definition-dddev --query 'taskDefinition' > task_definition.json
+        run: aws ecs describe-task-definition --task-definition crankbit-ecs-task-definition-${{vars.ENV_NAME}} --query 'taskDefinition' > task_definition.json
 
                     
       - name: Generate new task definition
